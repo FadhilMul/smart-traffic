@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  backend:
+    build: ./backend
+    container_name: traffic-backend
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: traffic-frontend
+    ports:
+      - "5500:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

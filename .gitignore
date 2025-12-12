@@ -1,0 +1,41 @@
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.log
+
+# virtual environments
+venv/
+.env/
+.venv/
+
+# Python builds
+build/
+dist/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# --- OS files ---
+.DS_Store
+Thumbs.db
+
+# --- Editor / IDE ---
+.vscode/
+.idea/
+
+# --- Node / Frontend ---
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# build artifacts (jika frontend pakai build)
+dist/
+build/
+
+# --- Docker ---
+*.pid

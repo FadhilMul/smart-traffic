@@ -1,0 +1,6 @@
+{
+  "seq_len": 10,
+  "model_file": "lstm_model.h5",
+  "scaler_file": "scaler.joblib",
+  "num_samples": 1768
+}
