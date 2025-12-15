@@ -1,214 +1,228 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Deteksi Kemacetan - Traffic Monitor with OSM</title>
-    
+
     <!-- CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
     <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-          crossorigin=""/>
-    
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+
     <!-- Leaflet Geocoder CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-    
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"
+    />
+
     <!-- Leaflet Routing Machine CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
-    
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css"
+    />
+
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css">
-    
+    <link rel="stylesheet" href="style.css" />
+
     <!-- Configure Backend URL -->
     <script>
-        window.BACKEND_URL = 'http://localhost:5001';
-        console.log('🔧 Backend URL configured to:', window.BACKEND_URL);
+      window.BACKEND_URL = "http://backend:5001";
+      console.log("🔧 Backend URL configured to:", window.BACKEND_URL);
     </script>
-    
+
     <style>
-        /* Fallback styles */
-        .map-fallback {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .map-fallback i {
-            font-size: 48px;
-            margin-bottom: 20px;
-            opacity: 0.8;
-        }
-        
-        .map-fallback h3 {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-        
-        .map-fallback p {
-            font-size: 16px;
-            margin-bottom: 20px;
-            opacity: 0.9;
-        }
-        
-        .retry-btn {
-            background: white;
-            color: #667eea;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: transform 0.3s;
-        }
+      /* Fallback styles */
+      .map-fallback {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-align: center;
+        padding: 20px;
+      }
 
-        .retry-btn:hover {
-            transform: translateY(-2px);
-        }
-        
-        /* Custom popup styles */
-        .traffic-popup .leaflet-popup-content-wrapper {
-            border-radius: 8px;
-            padding: 5px;
-        }
-        
-        .traffic-popup .leaflet-popup-content {
-            margin: 8px 12px;
-        }
-        
-        /* Route instructions */
-        .route-instruction {
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .route-instruction:last-child {
-            border-bottom: none;
-        }
-        
-        .instruction-distance {
-            font-size: 12px;
-            color: #666;
-            margin-top: 2px;
-        }
+      .map-fallback i {
+        font-size: 48px;
+        margin-bottom: 20px;
+        opacity: 0.8;
+      }
+
+      .map-fallback h3 {
+        font-size: 24px;
+        margin-bottom: 10px;
+      }
+
+      .map-fallback p {
+        font-size: 16px;
+        margin-bottom: 20px;
+        opacity: 0.9;
+      }
+
+      .retry-btn {
+        background: white;
+        color: #667eea;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform 0.3s;
+      }
+
+      .retry-btn:hover {
+        transform: translateY(-2px);
+      }
+
+      /* Custom popup styles */
+      .traffic-popup .leaflet-popup-content-wrapper {
+        border-radius: 8px;
+        padding: 5px;
+      }
+
+      .traffic-popup .leaflet-popup-content {
+        margin: 8px 12px;
+      }
+
+      /* Route instructions */
+      .route-instruction {
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+      }
+
+      .route-instruction:last-child {
+        border-bottom: none;
+      }
+
+      .instruction-distance {
+        font-size: 12px;
+        color: #666;
+        margin-top: 2px;
+      }
     </style>
-    
+
     <script>
-        // Configuration
-        window.appConfig = {
-            debug: true,
-            useOSM: true,
-            maxZoom: 19,
-            defaultLocation: {
-                lat: -6.2088,
-                lng: 106.8456
-            },
-            overpassApi: 'https://overpass-api.de/api/interpreter',
-            nominatimApi: 'https://nominatim.openstreetmap.org/search',
-            trafficUpdateInterval: 30000, // 30 detik
-            maxTrafficPoints: 50
-        };
+      // Configuration
+      window.appConfig = {
+        debug: true,
+        useOSM: true,
+        maxZoom: 19,
+        defaultLocation: {
+          lat: -6.2088,
+          lng: 106.8456,
+        },
+        overpassApi: "https://overpass-api.de/api/interpreter",
+        nominatimApi: "https://nominatim.openstreetmap.org/search",
+        trafficUpdateInterval: 30000, // 30 detik
+        maxTrafficPoints: 50,
+      };
 
-        // Load Leaflet with error handling
-        function loadLeaflet() {
-            console.log('🌍 Loading Leaflet...');
-            
-            if (window.L) {
-                console.log('✅ Leaflet already loaded');
-                return Promise.resolve();
-            }
-            
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-                script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
-                script.crossOrigin = '';
-                
-                script.onload = () => {
-                    console.log('✅ Leaflet loaded successfully');
-                    resolve();
-                };
-                
-                script.onerror = () => {
-                    console.error('❌ Failed to load Leaflet');
-                    reject(new Error('Failed to load Leaflet'));
-                };
-                
-                document.head.appendChild(script);
+      // Load Leaflet with error handling
+      function loadLeaflet() {
+        console.log("🌍 Loading Leaflet...");
+
+        if (window.L) {
+          console.log("✅ Leaflet already loaded");
+          return Promise.resolve();
+        }
+
+        return new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+          script.integrity =
+            "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=";
+          script.crossOrigin = "";
+
+          script.onload = () => {
+            console.log("✅ Leaflet loaded successfully");
+            resolve();
+          };
+
+          script.onerror = () => {
+            console.error("❌ Failed to load Leaflet");
+            reject(new Error("Failed to load Leaflet"));
+          };
+
+          document.head.appendChild(script);
+        });
+      }
+
+      // Load Leaflet plugins
+      function loadLeafletPlugins() {
+        const plugins = [
+          {
+            url: "https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js",
+            name: "Geocoder",
+          },
+          {
+            url: "https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js",
+            name: "Routing Machine",
+          },
+        ];
+
+        return Promise.all(
+          plugins.map((plugin) => {
+            return new Promise((resolve) => {
+              const script = document.createElement("script");
+              script.src = plugin.url;
+              script.onload = () => {
+                console.log(`✅ ${plugin.name} loaded`);
+                resolve();
+              };
+              script.onerror = () => {
+                console.warn(`⚠️ ${plugin.name} failed to load`);
+                resolve(); // Still resolve to continue
+              };
+              document.head.appendChild(script);
             });
-        }
+          })
+        );
+      }
 
-        // Load Leaflet plugins
-        function loadLeafletPlugins() {
-            const plugins = [
-                {
-                    url: 'https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js',
-                    name: 'Geocoder'
-                },
-                {
-                    url: 'https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js',
-                    name: 'Routing Machine'
-                }
-            ];
-            
-            return Promise.all(plugins.map(plugin => {
-                return new Promise((resolve) => {
-                    const script = document.createElement('script');
-                    script.src = plugin.url;
-                    script.onload = () => {
-                        console.log(`✅ ${plugin.name} loaded`);
-                        resolve();
-                    };
-                    script.onerror = () => {
-                        console.warn(`⚠️ ${plugin.name} failed to load`);
-                        resolve(); // Still resolve to continue
-                    };
-                    document.head.appendChild(script);
-                });
-            }));
-        }
+      // Initialize maps
+      async function initializeMaps() {
+        try {
+          await loadLeaflet();
+          await loadLeafletPlugins();
 
-        // Initialize maps
-        async function initializeMaps() {
-            try {
-                await loadLeaflet();
-                await loadLeafletPlugins();
-                
-                if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', () => {
-                        if (window.initApp) window.initApp();
-                    });
-                } else {
-                    if (window.initApp) window.initApp();
-                }
-                
-            } catch (error) {
-                console.error('❌ Failed to initialize maps:', error);
-                showMapFallback('Gagal memuat peta. Periksa koneksi internet Anda.');
-            }
+          if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", () => {
+              if (window.initApp) window.initApp();
+            });
+          } else {
+            if (window.initApp) window.initApp();
+          }
+        } catch (error) {
+          console.error("❌ Failed to initialize maps:", error);
+          showMapFallback("Gagal memuat peta. Periksa koneksi internet Anda.");
         }
+      }
 
-        // Show fallback when map fails
-        function showMapFallback(message) {
-            const mapContainer = document.getElementById('map');
-            if (!mapContainer) return;
-            
-            mapContainer.innerHTML = `
+      // Show fallback when map fails
+      function showMapFallback(message) {
+        const mapContainer = document.getElementById("map");
+        if (!mapContainer) return;
+
+        mapContainer.innerHTML = `
                 <div class="map-fallback">
                     <i class="fas fa-map-marked-alt"></i>
                     <h3>Peta Tidak Dapat Dimuat</h3>
-                    <p>${message || 'Terjadi kesalahan saat memuat peta.'}</p>
+                    <p>${message || "Terjadi kesalahan saat memuat peta."}</p>
                     <button onclick="retryMapLoad()" class="retry-btn">
                         <i class="fas fa-redo"></i> Coba Lagi
                     </button>
@@ -217,312 +231,350 @@
                     </p>
                 </div>
             `;
+      }
+
+      // Retry loading map
+      function retryMapLoad() {
+        const mapContainer = document.getElementById("map");
+        if (mapContainer) {
+          mapContainer.innerHTML = '<div id="map"></div>';
         }
+        initializeMaps();
+      }
 
-        // Retry loading map
-        function retryMapLoad() {
-            const mapContainer = document.getElementById('map');
-            if (mapContainer) {
-                mapContainer.innerHTML = '<div id="map"></div>';
-            }
-            initializeMaps();
-        }
+      // Start loading maps
+      document.addEventListener("DOMContentLoaded", initializeMaps);
 
-        // Start loading maps
-        document.addEventListener('DOMContentLoaded', initializeMaps);
-
-        // Global error handlers
-        window.showMapFallback = showMapFallback;
-        window.retryMapLoad = retryMapLoad;
-
+      // Global error handlers
+      window.showMapFallback = showMapFallback;
+      window.retryMapLoad = retryMapLoad;
     </script>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Notification -->
     <div id="notification" class="notification"></div>
-    
+
     <div class="app-container">
-        <!-- HEADER -->
-        <div class="app-header">
-            <div class="header-content">
-                <h1><i class="fas fa-traffic-light"></i> Deteksi Kemacetan OSM</h1>
-                <p>Pantau kondisi lalu lintas dengan data OpenStreetMap</p>
+      <!-- HEADER -->
+      <div class="app-header">
+        <div class="header-content">
+          <h1><i class="fas fa-traffic-light"></i> Deteksi Kemacetan OSM</h1>
+          <p>Pantau kondisi lalu lintas dengan data OpenStreetMap</p>
+        </div>
+        <div class="header-actions">
+          <button id="themeToggle" class="theme-toggle">
+            <i class="fas fa-moon"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="main-content">
+        <!-- LEFT COLUMN -->
+        <div class="left-column">
+          <!-- SEARCH -->
+          <div class="search-section">
+            <div class="search-box">
+              <div class="search-input-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input
+                  type="text"
+                  class="search-input"
+                  id="searchInput"
+                  placeholder="Cari lokasi atau alamat..."
+                />
+              </div>
+              <button class="search-btn" id="searchBtn">
+                <i class="fas fa-map-marker-alt"></i>
+                <span class="btn-text">Cari</span>
+              </button>
             </div>
-            <div class="header-actions">
-                <button id="themeToggle" class="theme-toggle">
-                    <i class="fas fa-moon"></i>
+            <div class="location-buttons">
+              <button class="btn" id="locationBtn">
+                <i class="fas fa-location-arrow"></i>
+                <span class="btn-text">Lokasi Saya</span>
+              </button>
+              <button class="btn" id="addLocationBtn">
+                <i class="fas fa-plus"></i>
+                <span class="btn-text">Tambah Lokasi</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- CONTROLS -->
+          <div class="controls-section">
+            <div class="controls-grid">
+              <button class="control-btn" id="refreshBtn">
+                <i class="fas fa-sync-alt"></i>
+                <span class="btn-text">Refresh</span>
+              </button>
+              <button class="control-btn" id="routeBtn">
+                <i class="fas fa-route"></i>
+                <span class="btn-text">Rute</span>
+              </button>
+              <button class="control-btn" id="reportBtn">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span class="btn-text">Laporkan</span>
+              </button>
+              <button class="control-btn" id="settingsBtn">
+                <i class="fas fa-cog"></i>
+                <span class="btn-text">Settings</span>
+              </button>
+            </div>
+            <div class="waze-stats">
+              <div class="stat-item">
+                <div class="stat-label">Status API</div>
+                <div class="api-status">
+                  <div class="status-dot" id="apiStatus"></div>
+                  <span id="apiStatusText">Loading...</span>
+                </div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-label">Update Terakhir</div>
+                <div class="waze-update" id="lastUpdate">--:--</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TRAFFIC INFO -->
+          <div class="traffic-section">
+            <h2 class="section-title">
+              <i class="fas fa-chart-line"></i> Informasi Kemacetan
+            </h2>
+            <div class="info-grid">
+              <div class="info-card">
+                <div class="info-icon">
+                  <i class="fas fa-clock"></i>
+                </div>
+                <div class="info-content">
+                  <div class="card-title">Waktu Perjalanan</div>
+                  <div class="card-value" id="travelTime">-- menit</div>
+                </div>
+              </div>
+              <div class="info-card">
+                <div class="info-icon">
+                  <i class="fas fa-car"></i>
+                </div>
+                <div class="info-content">
+                  <div class="card-title">Kondisi Lalu Lintas</div>
+                  <div class="card-value" id="trafficCondition">--</div>
+                  <div class="card-subtext" id="distanceText">Jarak: -- km</div>
+                </div>
+              </div>
+            </div>
+            <div class="map-data-source" id="trafficDataSource">
+              <i class="fas fa-database"></i> Data: Overpass API
+            </div>
+          </div>
+
+          <!-- ROUTE OPTIMIZATION -->
+          <div class="route-section">
+            <h2 class="section-title">
+              <i class="fas fa-route"></i> Optimasi Rute
+            </h2>
+            <div class="route-form">
+              <div class="form-group">
+                <input
+                  type="text"
+                  class="full-width"
+                  id="routeOrigin"
+                  placeholder="Asal (atau klik peta)"
+                />
+              </div>
+              <div class="form-group">
+                <input
+                  type="text"
+                  class="full-width"
+                  id="routeDestination"
+                  placeholder="Tujuan (atau klik peta)"
+                />
+              </div>
+              <div class="form-group">
+                <select class="full-width" id="optimizationType">
+                  <option value="balanced">Rute Seimbang</option>
+                  <option value="fastest">Tercepat</option>
+                  <option value="shortest">Terpendek</option>
+                </select>
+              </div>
+              <div class="route-controls">
+                <button class="btn-primary" id="calculateRouteBtn">
+                  <i class="fas fa-calculator"></i> Hitung Rute
                 </button>
+                <button class="btn-secondary" id="clearRouteBtn">
+                  <i class="fas fa-times"></i> Hapus
+                </button>
+              </div>
             </div>
+            <div class="route-results" id="routeResults">
+              <div class="empty-state">
+                <i class="fas fa-directions"></i>
+                <p>Masukkan asal dan tujuan untuk optimasi rute</p>
+              </div>
+            </div>
+          </div>
         </div>
-        
-        <div class="main-content">
-            <!-- LEFT COLUMN -->
-            <div class="left-column">
-                <!-- SEARCH -->
-                <div class="search-section">
-                    <div class="search-box">
-                        <div class="search-input-wrapper">
-                            <i class="fas fa-search search-icon"></i>
-                            <input type="text" class="search-input" id="searchInput" placeholder="Cari lokasi atau alamat...">
-                        </div>
-                        <button class="search-btn" id="searchBtn">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span class="btn-text">Cari</span>
-                        </button>
-                    </div>
-                    <div class="location-buttons">
-                        <button class="btn" id="locationBtn">
-                            <i class="fas fa-location-arrow"></i>
-                            <span class="btn-text">Lokasi Saya</span>
-                        </button>
-                        <button class="btn" id="addLocationBtn">
-                            <i class="fas fa-plus"></i>
-                            <span class="btn-text">Tambah Lokasi</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- CONTROLS -->
-                <div class="controls-section">
-                    <div class="controls-grid">
-                        <button class="control-btn" id="refreshBtn">
-                            <i class="fas fa-sync-alt"></i>
-                            <span class="btn-text">Refresh</span>
-                        </button>
-                        <button class="control-btn" id="routeBtn">
-                            <i class="fas fa-route"></i>
-                            <span class="btn-text">Rute</span>
-                        </button>
-                        <button class="control-btn" id="reportBtn">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <span class="btn-text">Laporkan</span>
-                        </button>
-                        <button class="control-btn" id="settingsBtn">
-                            <i class="fas fa-cog"></i>
-                            <span class="btn-text">Settings</span>
-                        </button>
-                    </div>
-                    <div class="waze-stats">
-                        <div class="stat-item">
-                            <div class="stat-label">Status API</div>
-                            <div class="api-status">
-                                <div class="status-dot" id="apiStatus"></div>
-                                <span id="apiStatusText">Loading...</span>
-                            </div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Update Terakhir</div>
-                            <div class="waze-update" id="lastUpdate">--:--</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- TRAFFIC INFO -->
-                <div class="traffic-section">
-                    <h2 class="section-title">
-                        <i class="fas fa-chart-line"></i> Informasi Kemacetan
-                    </h2>
-                    <div class="info-grid">
-                        <div class="info-card">
-                            <div class="info-icon">
-                                <i class="fas fa-clock"></i>
-                            </div>
-                            <div class="info-content">
-                                <div class="card-title">Waktu Perjalanan</div>
-                                <div class="card-value" id="travelTime">-- menit</div>
-                            </div>
-                        </div>
-                        <div class="info-card">
-                            <div class="info-icon">
-                                <i class="fas fa-car"></i>
-                            </div>
-                            <div class="info-content">
-                                <div class="card-title">Kondisi Lalu Lintas</div>
-                                <div class="card-value" id="trafficCondition">--</div>
-                                <div class="card-subtext" id="distanceText">Jarak: -- km</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="map-data-source" id="trafficDataSource">
-                        <i class="fas fa-database"></i> Data: Overpass API
-                    </div>
-                </div>
-                
-                <!-- ROUTE OPTIMIZATION -->
-                <div class="route-section">
-                    <h2 class="section-title">
-                        <i class="fas fa-route"></i> Optimasi Rute
-                    </h2>
-                    <div class="route-form">
-                        <div class="form-group">
-                            <input type="text" class="full-width" id="routeOrigin" placeholder="Asal (atau klik peta)">
-                        </div>
-                        <div class="form-group">
-                            <input type="text" class="full-width" id="routeDestination" placeholder="Tujuan (atau klik peta)">
-                        </div>
-                        <div class="form-group">
-                            <select class="full-width" id="optimizationType">
-                                <option value="balanced">Rute Seimbang</option>
-                                <option value="fastest">Tercepat</option>
-                                <option value="shortest">Terpendek</option>
-                            </select>
-                        </div>
-                        <div class="route-controls">
-                            <button class="btn-primary" id="calculateRouteBtn">
-                                <i class="fas fa-calculator"></i> Hitung Rute
-                            </button>
-                            <button class="btn-secondary" id="clearRouteBtn">
-                                <i class="fas fa-times"></i> Hapus
-                            </button>
-                        </div>
-                    </div>
-                    <div class="route-results" id="routeResults">
-                        <div class="empty-state">
-                            <i class="fas fa-directions"></i>
-                            <p>Masukkan asal dan tujuan untuk optimasi rute</p>
-                        </div>
-                    </div>
-                </div>
+
+        <!-- RIGHT COLUMN - Map -->
+        <div class="right-column">
+          <div class="map-section">
+            <div class="map-header">
+              <h2><i class="fas fa-map"></i> Peta Lalu Lintas OSM</h2>
+              <div class="map-controls">
+                <button
+                  id="toggleTrafficLayer"
+                  class="map-control-btn"
+                  title="Tampilkan data lalu lintas"
+                >
+                  <i class="fas fa-traffic-light"></i>
+                </button>
+                <button id="zoomIn" class="map-control-btn">
+                  <i class="fas fa-plus"></i>
+                </button>
+                <button id="zoomOut" class="map-control-btn">
+                  <i class="fas fa-minus"></i>
+                </button>
+                <button id="centerMap" class="map-control-btn">
+                  <i class="fas fa-crosshairs"></i>
+                </button>
+              </div>
             </div>
-            
-            <!-- RIGHT COLUMN - Map -->
-            <div class="right-column">
-                <div class="map-section">
-                    <div class="map-header">
-                        <h2><i class="fas fa-map"></i> Peta Lalu Lintas OSM</h2>
-                        <div class="map-controls">
-                            <button id="toggleTrafficLayer" class="map-control-btn" title="Tampilkan data lalu lintas">
-                                <i class="fas fa-traffic-light"></i>
-                            </button>
-                            <button id="zoomIn" class="map-control-btn">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                            <button id="zoomOut" class="map-control-btn">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                            <button id="centerMap" class="map-control-btn">
-                                <i class="fas fa-crosshairs"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="map"></div>
-                    <div class="map-info">
-                        <div class="map-coordinates">
-                            <span id="mapCoordinates">Memuat peta...</span>
-                        </div>
-                        <div class="map-zoom">
-                            <span id="mapZoom">Zoom: --</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- LOCATIONS LIST -->
-                <div class="locations-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-map-marker-alt"></i> Lokasi Kemacetan</h2>
-                        <button class="action-btn" id="filterBtn">
-                            <i class="fas fa-filter"></i> Filter
-                        </button>
-                    </div>
-                    <div class="locations-list" id="locationsList">
-                        <div class="empty-state">
-                            <i class="fas fa-map-marked-alt"></i>
-                            <p>Memuat data lokasi...</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- INCIDENTS -->
-                <div class="incidents-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-exclamation-triangle"></i> Insiden Lalu Lintas</h2>
-                        <button class="action-btn" id="refreshIncidentsBtn">
-                            <i class="fas fa-redo"></i> Refresh
-                        </button>
-                    </div>
-                    <div class="incidents-list" id="incidentsList">
-                        <div class="empty-state">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <p>Memuat data insiden...</p>
-                        </div>
-                    </div>
-                </div>
+            <div id="map"></div>
+            <div class="map-info">
+              <div class="map-coordinates">
+                <span id="mapCoordinates">Memuat peta...</span>
+              </div>
+              <div class="map-zoom">
+                <span id="mapZoom">Zoom: --</span>
+              </div>
             </div>
+          </div>
+
+          <!-- LOCATIONS LIST -->
+          <div class="locations-section">
+            <div class="section-header">
+              <h2><i class="fas fa-map-marker-alt"></i> Lokasi Kemacetan</h2>
+              <button class="action-btn" id="filterBtn">
+                <i class="fas fa-filter"></i> Filter
+              </button>
+            </div>
+            <div class="locations-list" id="locationsList">
+              <div class="empty-state">
+                <i class="fas fa-map-marked-alt"></i>
+                <p>Memuat data lokasi...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- INCIDENTS -->
+          <div class="incidents-section">
+            <div class="section-header">
+              <h2>
+                <i class="fas fa-exclamation-triangle"></i> Insiden Lalu Lintas
+              </h2>
+              <button class="action-btn" id="refreshIncidentsBtn">
+                <i class="fas fa-redo"></i> Refresh
+              </button>
+            </div>
+            <div class="incidents-list" id="incidentsList">
+              <div class="empty-state">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Memuat data insiden...</p>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
 
     <!-- MODALS -->
     <div id="reportModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-exclamation-triangle"></i> Laporkan Kemacetan</h3>
-                <button class="close-modal" id="closeModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label><i class="fas fa-map-pin"></i> Lokasi:</label>
-                    <input type="text" id="reportLocation" placeholder="Masukkan lokasi...">
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-signal"></i> Tingkat Keparahan:</label>
-                    <select id="reportSeverity">
-                        <option value="low">Ringan (Lancar)</option>
-                        <option value="medium" selected>Sedang</option>
-                        <option value="high">Parah (Macet)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-align-left"></i> Deskripsi:</label>
-                    <textarea id="reportDescription" rows="3" placeholder="Deskripsikan kondisi kemacetan..."></textarea>
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button class="btn-secondary" id="cancelBtn">
-                    <i class="fas fa-times"></i> <span class="btn-text">Batal</span>
-                </button>
-                <button class="btn-primary" id="submitReportBtn">
-                    <i class="fas fa-paper-plane"></i> <span class="btn-text">Kirim Laporan</span>
-                </button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>
+            <i class="fas fa-exclamation-triangle"></i> Laporkan Kemacetan
+          </h3>
+          <button class="close-modal" id="closeModal">&times;</button>
         </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label><i class="fas fa-map-pin"></i> Lokasi:</label>
+            <input
+              type="text"
+              id="reportLocation"
+              placeholder="Masukkan lokasi..."
+            />
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-signal"></i> Tingkat Keparahan:</label>
+            <select id="reportSeverity">
+              <option value="low">Ringan (Lancar)</option>
+              <option value="medium" selected>Sedang</option>
+              <option value="high">Parah (Macet)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-align-left"></i> Deskripsi:</label>
+            <textarea
+              id="reportDescription"
+              rows="3"
+              placeholder="Deskripsikan kondisi kemacetan..."
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" id="cancelBtn">
+            <i class="fas fa-times"></i> <span class="btn-text">Batal</span>
+          </button>
+          <button class="btn-primary" id="submitReportBtn">
+            <i class="fas fa-paper-plane"></i>
+            <span class="btn-text">Kirim Laporan</span>
+          </button>
+        </div>
+      </div>
     </div>
-    
+
     <div id="addLocationModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-map-marker-alt"></i> Tambah Lokasi Kemacetan</h3>
-                <button class="close-modal" id="closeLocationModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label><i class="fas fa-tag"></i> Nama Lokasi:</label>
-                    <input type="text" id="locationName" placeholder="Contoh: Kemang">
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-map"></i> Alamat:</label>
-                    <input type="text" id="locationAddress" placeholder="Jl. Kemang Raya, Jakarta Selatan">
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-traffic-light"></i> Tingkat Kemacetan:</label>
-                    <select id="locationSeverity">
-                        <option value="low">Lancar</option>
-                        <option value="medium" selected>Sedang</option>
-                        <option value="high">Macet</option>
-                    </select>
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button class="btn-secondary" id="cancelLocationBtn">
-                    <i class="fas fa-times"></i> <span class="btn-text">Batal</span>
-                </button>
-                <button class="btn-primary" id="submitLocationBtn">
-                    <i class="fas fa-save"></i> <span class="btn-text">Simpan Lokasi</span>
-                </button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3><i class="fas fa-map-marker-alt"></i> Tambah Lokasi Kemacetan</h3>
+          <button class="close-modal" id="closeLocationModal">&times;</button>
         </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label><i class="fas fa-tag"></i> Nama Lokasi:</label>
+            <input type="text" id="locationName" placeholder="Contoh: Kemang" />
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-map"></i> Alamat:</label>
+            <input
+              type="text"
+              id="locationAddress"
+              placeholder="Jl. Kemang Raya, Jakarta Selatan"
+            />
+          </div>
+          <div class="form-group">
+            <label
+              ><i class="fas fa-traffic-light"></i> Tingkat Kemacetan:</label
+            >
+            <select id="locationSeverity">
+              <option value="low">Lancar</option>
+              <option value="medium" selected>Sedang</option>
+              <option value="high">Macet</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" id="cancelLocationBtn">
+            <i class="fas fa-times"></i> <span class="btn-text">Batal</span>
+          </button>
+          <button class="btn-primary" id="submitLocationBtn">
+            <i class="fas fa-save"></i>
+            <span class="btn-text">Simpan Lokasi</span>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- JavaScript Files -->
     <script src="script.js"></script>
-</body>
+  </body>
 </html>

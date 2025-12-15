@@ -20,8 +20,9 @@ RUN mkdir -p /app/model
 
 ENV FLASK_ENV=production
 ENV PYTHONUNBUFFERED=1
+ENV PORT=5001
 
-EXPOSE 5000
+EXPOSE 5001
 
-# Use gunicorn in production
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app", "--workers", "2"]
+# Use gunicorn in production (respects PORT env var)
+CMD ["sh", "-c", "gunicorn -b 0.0.0.0:${PORT:-5001} app:app --workers 2"]
